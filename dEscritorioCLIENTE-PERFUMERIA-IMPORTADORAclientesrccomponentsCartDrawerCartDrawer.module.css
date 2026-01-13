@@ -1,0 +1,17 @@
+
+.totalValues {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+}
+
+.usdValue {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.finalTotal .usdValue {
+    font-size: 0.9rem;
+}

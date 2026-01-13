@@ -1,0 +1,23 @@
+
+.valGroup, .totalGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.usdSub {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+}
+
+.finalUsd {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.finalArs {
+    font-size: 1.2rem;
+    font-weight: 800;
+}

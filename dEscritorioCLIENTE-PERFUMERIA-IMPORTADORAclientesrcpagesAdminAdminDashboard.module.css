@@ -1,0 +1,96 @@
+
+/* Estilos para el selector de modo de cupón */
+.modalSelector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.modalSelector button {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.modalSelector button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.activeSelector {
+    background: var(--accent-color) !important;
+    color: var(--bg-color) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Listado de cupones existentes */
+.existingCoupons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.existingCoupons label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.couponGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.couponItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.couponItem:hover {
+    border-color: var(--accent-color);
+    background: rgba(197, 160, 89, 0.1);
+    transform: translateX(5px);
+}
+
+.couponInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.couponInfo strong {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.couponInfo span {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.couponItem svg {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.couponItem:hover svg {
+    opacity: 1;
+}
