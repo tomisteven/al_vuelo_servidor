@@ -13,6 +13,26 @@ const bulkPriceSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
+// Schema para tamaños de decant
+const decantSizeSchema = new mongoose.Schema({
+    size: {
+        type: Number,
+        required: true,
+        min: 1  // Mínimo 1ml
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    stock: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: 0
+    }
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
     nombre: {
         type: String,
@@ -77,7 +97,25 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    bulkPrices: [bulkPriceSchema]
+    bulkPrices: [bulkPriceSchema],
+    // Tipo de venta: perfume completo, decant, o ambos
+    sellType: {
+        type: String,
+        enum: ['perfume', 'decant', 'both'],
+        default: 'perfume'
+    },
+    // Opciones de decant (solo aplica si sellType es 'decant' o 'both')
+    decantOptions: {
+        available: {
+            type: Boolean,
+            default: false
+        },
+        sizes: [decantSizeSchema],
+        description: {
+            type: String,
+            default: ''
+        }
+    }
 }, {
     timestamps: true
 });

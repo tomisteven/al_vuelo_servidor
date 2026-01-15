@@ -12,7 +12,7 @@ class ProductService {
     }
 
     async getAllProducts(query = {}) {
-        const { search, categoria, sort, page = 1, limit = 12, isAdmin = false, exclusive } = query;
+        const { search, categoria, sort, page = 1, limit = 12, isAdmin = false, exclusive, sellType, excludeCategoria } = query;
         const filter = { isDeleted: false };
 
         // Si no es admin, solo mostrar activos
@@ -26,11 +26,27 @@ class ProductService {
         }
 
         if (search) {
-            filter.$text = { $search: search };
+            // Usar regex para búsqueda más flexible (parcial e insensible a mayúsculas)
+            const searchRegex = new RegExp(search, 'i');
+            filter.$or = [
+                { nombre: { $regex: searchRegex } },
+                { descripcion: { $regex: searchRegex } },
+                { categoria: { $regex: searchRegex } }
+            ];
         }
 
         if (categoria) {
             filter.categoria = categoria;
+        }
+
+        // Excluir categoría específica (ej: NICHO en Home) - case insensitive
+        if (excludeCategoria && !categoria) {
+            filter.categoria = { $not: { $regex: new RegExp(`^${excludeCategoria}$`, 'i') } };
+        }
+
+        // Filtrar por tipo de venta (perfume, decant, both)
+        if (sellType && ['perfume', 'decant', 'both'].includes(sellType)) {
+            filter.sellType = sellType;
         }
 
         const sortOptions = {};
@@ -80,7 +96,7 @@ class ProductService {
         if (!product) throw new Error('Producto no encontrado');
 
         // Actualizar campos permitidos
-        const allowedFields = ['nombre', 'descripcion', 'sku', 'precio', 'precioCard', 'stock', 'categoria', 'imagenes', 'bulkPrices', 'isActive', 'isExclusive', 'precioExclusivo'];
+        const allowedFields = ['nombre', 'descripcion', 'sku', 'precio', 'precioCard', 'stock', 'categoria', 'imagenes', 'bulkPrices', 'isActive', 'isExclusive', 'precioExclusivo', 'sellType', 'decantOptions'];
         allowedFields.forEach(field => {
             if (updateData[field] !== undefined) {
                 product[field] = updateData[field];
@@ -123,6 +139,26 @@ class ProductService {
             .sort((a, b) => b.minQuantity - a.minQuantity)[0];
 
         return applicablePrice ? applicablePrice.price : product.precio;
+    }
+
+    // Calcular precio de decant según tamaño seleccionado
+    calculateDecantPrice(product, size) {
+        if (!product.decantOptions || !product.decantOptions.sizes || product.decantOptions.sizes.length === 0) {
+            return null;
+        }
+
+        const decantSize = product.decantOptions.sizes.find(s => s.size === size);
+        return decantSize ? decantSize.price : null;
+    }
+
+    // Obtener stock de un tamaño de decant específico
+    getDecantStock(product, size) {
+        if (!product.decantOptions || !product.decantOptions.sizes || product.decantOptions.sizes.length === 0) {
+            return 0;
+        }
+
+        const decantSize = product.decantOptions.sizes.find(s => s.size === size);
+        return decantSize ? decantSize.stock : 0;
     }
 }
 
