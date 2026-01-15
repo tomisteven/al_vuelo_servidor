@@ -17,6 +17,7 @@ const productValidation = [
 router.post('/', productValidation, productController.createProduct);
 router.get('/', productController.getAllProducts);
 router.get('/categories', productController.getCategories);
+router.post('/categories', productController.createCategory);
 router.get('/:slug', productController.getProductBySlug);
 router.put('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
