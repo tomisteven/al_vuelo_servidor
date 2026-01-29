@@ -9,21 +9,31 @@ class ComboService {
     }
 
     async getAllCombos() {
-        return await Combo.find().populate('products.product');
+        const combos = await Combo.find().populate('products.product');
+        // Recalcular precios para cada combo para asegurar que estén actualizados
+        for (let combo of combos) {
+            await this.recalculateComboPrices(combo);
+        }
+        return combos;
     }
 
     async getComboById(id) {
         const combo = await Combo.findById(id).populate('products.product');
         if (!combo) throw new Error('Combo no encontrado');
+
+        // Recalcular precios antes de devolver
+        await this.recalculateComboPrices(combo);
         return combo;
     }
 
     async updateCombo(id, updateData) {
-        if (updateData.products) {
-            await this.calculatePrices(updateData);
-        }
-        const combo = await Combo.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        const combo = await Combo.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate('products.product');
         if (!combo) throw new Error('Combo no encontrado');
+
+        // Recalcular precios después de actualizar
+        await this.recalculateComboPrices(combo);
+        await combo.save();
+
         return combo;
     }
 
@@ -33,31 +43,45 @@ class ComboService {
         return combo;
     }
 
-    async calculatePrices(comboData) {
+    /**
+     * Recalcula los precios de un combo basado en los precios actuales de sus productos.
+     * Esta función maneja tanto el objeto Mongoose como datos planos si fuera necesario.
+     */
+    async recalculateComboPrices(combo) {
         let basePrice = 0;
 
-        for (const item of comboData.products) {
-            const product = await Product.findById(item.product);
-            if (!product) throw new Error(`Producto ${item.product} no encontrado`);
-            if (product.stock < item.quantity) {
-                throw new Error(`Stock insuficiente para el producto ${product.nombre}`);
-            }
+        for (const item of combo.products) {
+            // El producto puede estar poblado o ser solo un ID
+            const product = (item.product && item.product.precio !== undefined)
+                ? item.product
+                : await Product.findById(item.product);
+
+            if (!product) continue; // O manejar error si el producto desapareció
+
             basePrice += (product.precio * item.quantity);
         }
 
-        comboData.basePrice = basePrice;
+        combo.basePrice = basePrice;
 
-        // Si no se proporcionó un precio final con descuento, calculamos según el porcentaje
-        if (!comboData.finalPrice && comboData.discountPercentage) {
-            comboData.finalPrice = basePrice * (1 - comboData.discountPercentage / 100);
-        } else if (!comboData.finalPrice) {
-            comboData.finalPrice = basePrice;
+        // Recalcular precio final
+        if (combo.discountPercentage > 0) {
+            combo.finalPrice = basePrice * (1 - combo.discountPercentage / 100);
+        } else {
+            // Si no tiene porcentaje de descuento, el precio final debe ser el precio base
+            // (a menos que se quiera permitir un precio fijo desvinculado, 
+            // pero el requerimiento es que el precio esté actualizado)
+            combo.finalPrice = basePrice;
         }
 
-        // Precio con tarjeta (si no se envía, se puede aplicar un recargo base o dejar igual)
-        if (!comboData.finalPriceWithCard) {
-            comboData.finalPriceWithCard = comboData.finalPrice * 1.1; // Ejemplo: 10% recargo
-        }
+        // Precio con tarjeta: 10% recargo sobre el precio final calculado
+        combo.finalPriceWithCard = combo.finalPrice * 1.1;
+
+        return combo;
+    }
+
+    // Mantenemos calculatePrices para compatibilidad con createCombo si se prefiere
+    async calculatePrices(comboData) {
+        return this.recalculateComboPrices(comboData);
     }
 }
 
